@@ -31,6 +31,35 @@ def angle_difference(a: float, b: float) -> float:
     return abs((a - b + 180) % 360 - 180)
 
 
+def street_corner_checkpoints(
+    points: list[tuple[float, float]],
+    turn_threshold_degree: float = 30,
+    min_corner_distance_m: float = 25,
+    include_endpoints: bool = True,
+) -> list[tuple[float, float]]:
+    """Return points that look like street-corner turns, optionally with endpoints."""
+    if not points:
+        return []
+    if len(points) < 3:
+        if not include_endpoints:
+            return []
+        return [points[0]] if len(points) == 1 else [points[0], points[-1]]
+
+    checkpoints = [points[0]] if include_endpoints else []
+    for index in range(1, len(points) - 1):
+        previous, current, following = points[index - 1 : index + 2]
+        incoming = bearing_degree(*previous, *current)
+        outgoing = bearing_degree(*current, *following)
+        is_turn = angle_difference(incoming, outgoing) >= turn_threshold_degree
+        previous_checkpoint = checkpoints[-1] if checkpoints else points[0]
+        far_enough = haversine_m(*previous_checkpoint, *current) >= min_corner_distance_m
+        if is_turn and far_enough:
+            checkpoints.append(current)
+    if include_endpoints and checkpoints[-1] != points[-1]:
+        checkpoints.append(points[-1])
+    return checkpoints
+
+
 def sample_route(points: list[tuple[float, float]], interval_m: float = 10) -> list[tuple[float, float]]:
     """Interpolate a polyline so adjacent samples are at most interval_m apart."""
     if not points:
@@ -61,4 +90,3 @@ def sample_route(points: list[tuple[float, float]], interval_m: float = 10) -> l
     if samples[-1] != points[-1]:
         samples.append(points[-1])
     return samples
-

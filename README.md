@@ -1,6 +1,6 @@
 # Taipei Safe Route
 
-用 Google Routes API 取得台北車站到西門町的步行候選路線，再用臺北市政府公開 CCTV 位置估算每條路線的覆蓋比例，推薦覆蓋較完整的路線。
+用 Google Routes API 取得台北車站到西門町的步行候選路線，再用臺北市政府公開 CCTV 位置估算每條路線的轉角覆蓋比例，推薦覆蓋較完整的路線。覆蓋率只以 polyline 明顯轉彎處作為 checkpoint，並以轉角周邊 100m 作為估計範圍，不再以整條道路每隔數公尺計算。
 
 ## Setup
 

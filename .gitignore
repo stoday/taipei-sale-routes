@@ -5,3 +5,4 @@ __pycache__/
 *.pyc
 .agents
 .claude
+.present

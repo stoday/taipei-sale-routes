@@ -7,7 +7,7 @@ import streamlit as st
 from dotenv import load_dotenv
 from streamlit_folium import st_folium
 
-from coverage import analyze_route_coverage, load_cameras, rank_routes
+from coverage import TURN_CAMERA_RADIUS_M, analyze_route_coverage, load_cameras, rank_routes
 from geo import haversine_m
 from routes import get_routes
 
@@ -68,11 +68,11 @@ def _route_map(routes, cameras):
             color="#8b5cf6",
             fill=True,
             fill_opacity=0.85,
-            tooltip=f"CCTV {camera.camera_id} · 估計半徑 50m",
+            tooltip=f"CCTV {camera.camera_id} · 轉角估計半徑 {TURN_CAMERA_RADIUS_M:.0f}m",
         ).add_to(fmap)
         folium.Circle(
             [camera.lat, camera.lng],
-            radius=50,
+            radius=TURN_CAMERA_RADIUS_M,
             color="#8b5cf6",
             weight=1,
             fill=True,
@@ -110,17 +110,18 @@ def main() -> None:
                 recommended = analyzed[0]
                 st.success("推薦：攝影機覆蓋率最高的路線")
                 metric_left, metric_right = st.columns(2)
-                metric_left.metric("估計覆蓋率", f"{recommended.coverage_ratio:.0%}", border=True)
+                metric_left.metric("轉角估計覆蓋率", f"{recommended.coverage_ratio:.0%}", border=True)
                 metric_right.metric("步行時間", f"{_minutes(recommended.duration_sec)} 分鐘", border=True)
                 st.metric("路線距離", f"{recommended.distance_m / 1000:.2f} km", border=True)
-                st.caption(f"覆蓋連續性：最長未覆蓋區段 {recommended.longest_uncovered_gap_m:.0f}m")
+                st.caption(f"街口連續性：最長未覆蓋距離 {recommended.longest_uncovered_gap_m:.0f}m")
+                st.caption("覆蓋率只計算行走路線需要轉彎的轉角。")
                 if len(analyzed) > 1:
                     with st.expander("查看其他候選路線"):
                         for route in analyzed[1:]:
-                            st.write(f"**{route.route_id}** · {_route_summary(route)} · 覆蓋率 {route.coverage_ratio:.0%}")
+                            st.write(f"**{route.route_id}** · {_route_summary(route)} · 轉角覆蓋率 {route.coverage_ratio:.0%}")
 
             st.caption(
-                "紫色標記為公開 CCTV，淡紫色圓圈為 50m 估計覆蓋範圍。結果僅供技術展示。"
+                f"紫色標記為公開 CCTV，淡紫色圓圈為轉角 {TURN_CAMERA_RADIUS_M:.0f}m 估計範圍。結果僅供技術展示。"
             )
 
     with right:
